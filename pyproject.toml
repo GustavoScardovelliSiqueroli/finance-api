@@ -1,0 +1,40 @@
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = 'py312'
+exclude = ['migrations', "tests"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+extend-select = [
+    "E",  # Erros do pycodestyle (PEP 8)
+    "F",  # Erros do pyflakes
+    "W",  # Avisos do pycodestyle
+    "Q",  # Regras de aspas (flake8-quotes)
+    "I",  # Ordenação de imports (isort)
+    "C",  # Complexidade de código (mccabe)
+    "B",  # Bugs comuns (flake8-bugbear)
+    "ANN",
+    ]
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+force-to-top = ["src"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.taskipy.tasks]
+pre_test = 'task lint'
+test = 'pytest -p no:warnings -vv'
+lint = 'ruff check . ; ruff check . --diff'
+format = 'ruff check . --fix ; ruff format .'
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
