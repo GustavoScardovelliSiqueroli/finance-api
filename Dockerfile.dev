@@ -1,0 +1,24 @@
+# Use a imagem base do Python
+FROM python:3.10-slim
+
+# Define o diretório de trabalho
+WORKDIR /code
+
+# Instala o Git e atualiza os pacotes (necessário para dependências via Git)
+RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Define o diretório como seguro para o Git (evita warnings)
+RUN git config --global --add safe.directory /code
+
+# Copia o arquivo de dependências
+COPY ./requirements.txt /code/requirements.txt
+
+# Instala as dependências do Python
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# Copia a pasta `src` para o container
+
+EXPOSE 8081
+
+# Comando para iniciar o servidor FastAPI
+CMD ["fastapi", "dev", "src/main.py", "--host", "0.0.0.0", "--port", "8081"]
