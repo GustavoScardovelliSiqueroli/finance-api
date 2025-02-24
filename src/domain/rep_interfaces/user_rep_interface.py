@@ -24,3 +24,7 @@ class UserRepInterface(ABC):
     @abstractmethod
     async def delete(self, id: str) -> User:
         pass
+
+    @abstractmethod
+    async def get_by_login(self, login: str) -> Optional[User]:
+        pass

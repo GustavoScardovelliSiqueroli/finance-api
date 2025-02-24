@@ -53,6 +53,13 @@ class PessoaRepository(UserRepInterface):
                 ) from e
             raise e
 
+    async def get_by_login(self, login: str) -> Optional[User]:
+        async with async_session() as session:
+            async with session.begin():
+                stmt = select(User).where(User.login == login)
+                result = await session.execute(stmt)
+                return result.scalars().first()
+
     async def get_by_id(self, id: str) -> Optional[User]: ...
 
     async def update(self, id: str, data: User) -> User: ...
