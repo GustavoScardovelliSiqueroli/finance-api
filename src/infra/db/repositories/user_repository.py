@@ -11,7 +11,7 @@ from src.domain.rep_interfaces.user_rep_interface import UserRepInterface
 from src.infra.db.database import async_session
 
 
-class PessoaRepository(UserRepInterface):
+class UserRepository(UserRepInterface):
     async def get_all(self) -> list[Optional[User]]:
         async with async_session() as session:
             async with session.begin():
