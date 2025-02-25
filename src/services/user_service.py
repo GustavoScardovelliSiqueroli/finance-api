@@ -19,8 +19,8 @@ config = Config()
 
 
 class UserService:
-    TOKEN_HOURS: Final[int] = 24
-    REFRESH_TOKEN_DAYS: Final[int] = 30
+    TOKEN_HOURS: Final[int] = 1
+    REFRESH_TOKEN_DAYS: Final[int] = 7
 
     def __init__(self, repository: UserRepInterface) -> None:
         self.repository = repository

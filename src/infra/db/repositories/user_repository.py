@@ -32,7 +32,7 @@ class UserRepository(UserRepInterface):
                 error_message = e.orig.args[1]
                 column_name = error_message.split("'")[3]
                 raise DuplicateRecordError(
-                    str(column_name), str(data.__dict__['column_name'])
+                    str(column_name), str(data.__dict__[column_name])
                 ) from e
             if isinstance(e.orig, aiomysql.MySQLError) and e.orig.args[0] == 1452:
                 error_message = str(e.orig.args[1])

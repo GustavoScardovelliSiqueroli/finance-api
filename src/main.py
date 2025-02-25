@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from src.api.controllers.user_controller import router as user_router
+from src.api.controllers.auth_controller import router as user_router
 from src.infra.db.repositories.user_repository import UserRepository
 
 
