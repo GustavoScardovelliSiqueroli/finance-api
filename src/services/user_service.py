@@ -1,6 +1,5 @@
-import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Final, Optional
 
 import bcrypt
 import jwt
@@ -8,6 +7,8 @@ import jwt
 from src.config import Config
 from src.domain.exceptions.auth_exceptions import (
     AuthenticationError,
+    InvalidTokenError,
+    TokenExpiredError,
 )
 from src.domain.models.user import User
 from src.domain.rep_interfaces.user_rep_interface import (
@@ -18,26 +19,41 @@ config = Config()
 
 
 class UserService:
+    TOKEN_HOURS: Final[int] = 24
+    REFRESH_TOKEN_DAYS: Final[int] = 30
+
     def __init__(self, repository: UserRepInterface) -> None:
         self.repository = repository
 
-    async def login_user(self, login: str, password: str) -> str:
+    async def login_user(self, login: str, password: str) -> tuple[str, str]:
         user = await self.repository.get_by_login(login)
         if not user:
             raise AuthenticationError('Invalid login or password')
         if not self.__verify_password(password, user.password):
             raise AuthenticationError('Invalid login or password')
-        token: str = self.__generate_jwt_token(user)
-        return token
+        token, refresh_token = self.__generate_jwt_token(user)
+        return token, refresh_token
 
-    async def register_user(
-        self,
-        data: User,
-    ) -> User:
-        data.id = str(uuid.uuid4())  # type: ignore
-        data.password = self.__hash_password(data.password)
-        data.criado = datetime.now()  # type: ignore
-        return await self.repository.create(data)
+    async def register_user(self, login: str, password: str) -> User:
+        hashed_password: str = self.__hash_password(password)
+        user = User(login=login, password=hashed_password)
+        return await self.repository.create(user)
+
+    async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
+        try:
+            payload: dict[str, str] = jwt.decode(
+                refresh_token, config.API_KEY, algorithms=['HS256']
+            )
+            user_id: str = payload['user_id']
+            user: Optional[User] = await self.repository.get_by_id(user_id)
+            if not user:
+                raise InvalidTokenError('Invalid refresh token')
+            token, refresh_token = self.__generate_jwt_token(user)
+            return token, refresh_token
+        except jwt.ExpiredSignatureError as e:
+            raise TokenExpiredError('Refresh token has expired') from e
+        except jwt.InvalidTokenError as e:
+            raise InvalidTokenError('Invalid refresh token') from e
 
     async def get_all_user(self) -> list[Optional[User]]:
         return await self.repository.get_all()
@@ -52,11 +68,19 @@ class UserService:
             plain_password.encode('utf-8'), hashed_password.encode('utf-8')
         )
 
-    def __generate_jwt_token(self, user: User) -> str:
+    def __generate_jwt_token(self, user: User) -> tuple[str, str]:
         payload: dict[str, str] = {
             'user_id': str(user.id),
             'login': str(user.login),
-            'exp': str(datetime.now(timezone.utc) + timedelta(hours=24)),
+            'exp': str(datetime.now(timezone.utc) + timedelta(hours=self.TOKEN_HOURS)),
         }
         token: str = jwt.encode(payload, config.API_KEY, 'HS256')
-        return token
+        refresh_payload: dict[str, str] = {
+            'user_id': str(user.id),
+            'login': str(user.login),
+            'exp': str(
+                datetime.now(timezone.utc) + timedelta(days=self.REFRESH_TOKEN_DAYS)
+            ),
+        }
+        refresh_token: str = jwt.encode(refresh_payload, config.API_KEY, 'HS256')
+        return token, refresh_token

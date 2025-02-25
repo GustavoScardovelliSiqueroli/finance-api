@@ -14,11 +14,12 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(UUIDdb, primary_key=True, default=uuid4())
     login: Mapped[str] = mapped_column(String(100), nullable=False)
     password: Mapped[str] = mapped_column(String(256), nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(
+    refresh_token: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now()
     )
-    updated_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, nullable=True)
-    deleted_at: Mapped[Optional[DateTime]] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     def __init__(self, login: str, password: str) -> None:
         self.login = login
