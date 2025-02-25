@@ -3,15 +3,16 @@ from pydantic_settings import BaseSettings
 
 class Config(BaseSettings):
     DB_USER: str = 'dev'
-    DB_PASSWORD: str = 'dev123'
+    DB_PASSWORD: str
     DB_HOST: str = 'dbfinance'
     DB_NAME: str = 'finance'
-    MYSQL_ROOT_PASSWORD: str = 'dev123'
+    MYSQL_ROOT_PASSWORD: str
     MYSQL_DATABASE: str = 'finance'
     MYSQL_USER: str = 'dev'
-    MYSQL_PASSWORD: str = 'dev123'
+    MYSQL_PASSWORD: str
     DB_PORT: int = 3307
-    API_KEY: str = 'apikeydev'
+    API_KEY: str
+    ALGORITHM: str
 
     class Config:
         env_file = '.env'

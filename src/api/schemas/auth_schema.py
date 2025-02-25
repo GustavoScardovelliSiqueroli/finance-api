@@ -3,10 +3,13 @@ from pydantic import BaseModel, field_validator
 
 class Token(BaseModel):
     access_token: str
-    refresh_token: str
 
     class Config:
         from_attributes = True
+
+
+class RefreshToken(Token):
+    refresh_token: str
 
 
 class Login(BaseModel):
