@@ -15,6 +15,8 @@ from src.domain.rep_interfaces.user_rep_interface import (
     UserRepInterface,
 )
 
+config = Config()  # type: ignore
+
 
 class UserService:
     TOKEN_HOURS: Final[int] = 1
@@ -40,7 +42,7 @@ class UserService:
     async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
         try:
             payload: dict[str, str] = jwt.decode(
-                refresh_token, Config.API_KEY, algorithms=[Config.ALGORITHM]
+                refresh_token, config.API_KEY, algorithms=[config.ALGORITHM]
             )
             user_id: str = payload['user_id']
             user: Optional[User] = await self.repository.get_by_id(user_id)
@@ -72,7 +74,7 @@ class UserService:
             'login': str(user.login),
             'exp': str(datetime.now(timezone.utc) + timedelta(hours=self.TOKEN_HOURS)),
         }
-        token: str = jwt.encode(payload, Config.API_KEY, 'HS256')
+        token: str = jwt.encode(payload, config.API_KEY, 'HS256')
         refresh_payload: dict[str, str] = {
             'user_id': str(user.id),
             'login': str(user.login),
@@ -80,5 +82,5 @@ class UserService:
                 datetime.now(timezone.utc) + timedelta(days=self.REFRESH_TOKEN_DAYS)
             ),
         }
-        refresh_token: str = jwt.encode(refresh_payload, Config.API_KEY, 'HS256')
+        refresh_token: str = jwt.encode(refresh_payload, config.API_KEY, 'HS256')
         return token, refresh_token
