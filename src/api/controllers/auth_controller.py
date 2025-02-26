@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.api.schemas.auth_schema import Login, RefreshToken, Token
-from src.dependencies import get_user_service
+from src.cross_cutting.dependencies import get_user_service
 from src.domain.exceptions.auth_exceptions import AuthenticationError
 from src.domain.exceptions.db_exceptions import DuplicateRecordError, ForeignKeyError
 from src.services.user_service import UserService

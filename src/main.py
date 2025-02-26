@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
 from src.api.controllers.auth_controller import router as user_router
+from src.cross_cutting.middlewares import AuthMiddleware
 from src.infra.db.repositories.user_repository import UserRepository
-from src.middlewares import AuthMiddleware
 
 
 def create_app() -> FastAPI:
