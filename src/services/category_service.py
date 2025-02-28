@@ -34,6 +34,6 @@ class CategoryService:
     async def delete_category(self, id: str) -> Category:
         object_instance = await self.repository.get_by_id(id)
         if object_instance is None:
-            raise RecordNotFoundError(id)
+            raise RecordNotFoundError('Category', id)
         object_instance.deleted_at = datetime.now()
         return await self.repository.update(id, object_instance)

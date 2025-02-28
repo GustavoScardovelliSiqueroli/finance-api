@@ -4,6 +4,7 @@ from typing import Optional
 import aiomysql  # type: ignore
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.domain.exceptions.db_exceptions import DuplicateRecordError, ForeignKeyError
 from src.domain.models.user import User
@@ -12,8 +13,13 @@ from src.infra.db.database import async_session
 
 
 class UserRepository(UserRepInterface):
+    def __init__(
+        self, session: async_sessionmaker[AsyncSession] = async_session
+    ) -> None:
+        self.session = session
+
     async def get_all(self) -> list[Optional[User]]:
-        async with async_session() as session:
+        async with self.session() as session:
             async with session.begin():
                 stmt = select(User)
                 result = await session.execute(stmt)
@@ -21,7 +27,7 @@ class UserRepository(UserRepInterface):
 
     async def create(self, data: User) -> User:
         try:
-            async with async_session() as session:
+            async with self.session() as session:
                 async with session.begin():
                     session.add(data)
                 await session.commit()
@@ -54,7 +60,7 @@ class UserRepository(UserRepInterface):
             raise e
 
     async def get_by_login(self, login: str) -> Optional[User]:
-        async with async_session() as session:
+        async with self.session() as session:
             async with session.begin():
                 stmt = select(User).where(User.login == login)
                 result = await session.execute(stmt)
