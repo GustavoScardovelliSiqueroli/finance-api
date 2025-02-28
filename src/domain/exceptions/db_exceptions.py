@@ -7,7 +7,7 @@ class DatabaseError(Exception):
 class RecordNotFoundError(DatabaseError):
     """Raised when a record is not found in the database"""
 
-    def __init__(self, record_id: int) -> None:
+    def __init__(self, record_id: str) -> None:
         self.message = f'Record with ID {record_id} not found.'
         super().__init__(self.message)
 
