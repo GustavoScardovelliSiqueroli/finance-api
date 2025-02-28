@@ -14,10 +14,15 @@ class CategoryService:
         return await self.repository.create(data)
 
     async def get_all_category(self) -> list[Optional[Category]]:
-        datas = await self.repository.get_all()
-        if datas == []:
+        object_instances = await self.repository.get_all()
+        if object_instances == []:
             return []
-        return [data for data in datas if data if data.deleted_at is None]
+        return [
+            object_instance
+            for object_instance in object_instances
+            if object_instance
+            if object_instance.deleted_at is None
+        ]
 
     async def get_category_by_id(self, id: str) -> Optional[Category]:
         return await self.repository.get_by_id(id)
@@ -27,8 +32,8 @@ class CategoryService:
         return await self.repository.update(id, data)
 
     async def delete_category(self, id: str) -> Category:
-        data = await self.repository.get_by_id(id)
-        if data is None:
+        object_instance = await self.repository.get_by_id(id)
+        if object_instance is None:
             raise RecordNotFoundError(id)
-        data.deleted_at = datetime.now()
-        return await self.repository.update(id, data)
+        object_instance.deleted_at = datetime.now()
+        return await self.repository.update(id, object_instance)

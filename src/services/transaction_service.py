@@ -3,7 +3,7 @@ from typing import Optional
 
 from src.domain.exceptions.db_exceptions import RecordNotFoundError
 from src.domain.models.transaction import Transaction
-from src.domain.rep_interfaces.transation_rep_interface import TransactionRepInterface
+from src.domain.rep_interfaces.transaction_rep_interface import TransactionRepInterface
 from src.services.category_service import CategoryService
 
 
@@ -20,10 +20,15 @@ class TransactionService:
         return await self.repository.create(data)
 
     async def get_all_transaction(self) -> list[Optional[Transaction]]:
-        datas = await self.repository.get_all()
-        if datas == []:
+        object_instances = await self.repository.get_all()
+        if object_instances == []:
             return []
-        return [data for data in datas if data if data.deleted_at is None]
+        return [
+            object_instance
+            for object_instance in object_instances
+            if object_instance
+            if object_instance.deleted_at is None
+        ]
 
     async def get_transaction_by_id(self, id: str) -> Optional[Transaction]:
         return await self.repository.get_by_id(id)
@@ -33,18 +38,18 @@ class TransactionService:
         return await self.repository.update(id, data)
 
     async def delete_transaction(self, id: str) -> Transaction:
-        data = await self.repository.get_by_id(id)
-        if data is None:
+        object_instance = await self.repository.get_by_id(id)
+        if object_instance is None:
             raise RecordNotFoundError(id)
-        data.deleted_at = datetime.now()
-        return await self.repository.update(id, data)
+        object_instance.deleted_at = datetime.now()
+        return await self.repository.update(id, object_instance)
 
     async def add_category(self, id: str, category_id: str) -> Transaction:
-        data = await self.repository.get_by_id(id)
-        if data is None:
+        transaction = await self.repository.get_by_id(id)
+        if transaction is None:
             raise RecordNotFoundError(id)
         categoty = await self.category_service.get_category_by_id(category_id)
         if categoty is None:
             raise RecordNotFoundError(category_id)
-        data.categories.append(categoty)
-        return await self.repository.update(id, data)
+        transaction.categories.append(categoty)
+        return await self.repository.update(id, transaction)
