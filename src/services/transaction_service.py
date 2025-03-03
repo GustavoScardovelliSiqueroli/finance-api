@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Any, Optional
 
+from src.domain.models.split import Split
 from src.domain.models.transaction import Transaction
 from src.domain.rep_interfaces.transaction_rep_interface import TransactionRepInterface
 from src.services.category_service import CategoryService
+from src.services.split_service import SplitService
 
 
 class TransactionService:
@@ -11,9 +13,11 @@ class TransactionService:
         self,
         repository: TransactionRepInterface,
         category_service: CategoryService,
+        split_service: SplitService,
     ) -> None:
         self.category_service = category_service
         self.repository = repository
+        self.split_service = split_service
 
     async def create_transaction(self, data: Transaction) -> Transaction:
         return await self.repository.create(data)
@@ -41,3 +45,44 @@ class TransactionService:
 
     async def add_category(self, id: str, id_category: str) -> Transaction:
         return await self.repository.add_category(id, id_category)
+
+    async def remove_category(self, id: str, id_category: str) -> Transaction: ...
+
+    async def add_splits(self, id: str, data: list[dict[str, Any]]) -> None:
+        transaction = await self.repository.get_by_id(id)
+        if transaction is None:
+            raise ValueError(f'Transaction with ID {id} not found.')
+
+        splits_sum = 0
+        for split in data:
+            splits_sum += split['value']
+        if splits_sum != transaction.value:
+            raise ValueError('Splits must add up to 100%')
+
+        splits: list[dict[str, Any]] = []
+        for split in data:
+            category = await self.category_service.get_category_by_id(
+                split['id_category']
+            )
+            if category is None:
+                raise ValueError(f'Category with ID {split["category_id"]} not found.')
+
+            if category.level != 1:
+                raise ValueError(
+                    f'Category with ID {split["category_id"]} is not level 1.'
+                )
+
+            split['created_at'] = datetime.now()
+            splits.append(split)
+
+        for split in splits:
+            split['id_transaction'] = id
+            split_model = Split(**split)
+            await self.split_service.create_split(split_model)
+
+        # ADD splits with your repository
+        ...
+
+    async def remove_splits(self, id: str, id_split: str) -> Transaction:
+        # REMOVE all splits
+        ...
