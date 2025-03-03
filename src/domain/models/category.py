@@ -14,6 +14,7 @@ class Category(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     id_user: Mapped[UUID] = mapped_column(ForeignKey('users.id'), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    level: Mapped[int] = mapped_column(Integer, nullable=False)
     type: Mapped[Type] = mapped_column(Enum(Type), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now()
