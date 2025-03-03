@@ -10,7 +10,7 @@ from src.domain.models.base import Base
 class Split(Base):
     __tablename__ = 'splits'
     id: Mapped[int] = mapped_column(primary_key=True)
-    transaction_id: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
+    id_transaction: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
     category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
     amount: Mapped[float]
     created_at: Mapped[datetime] = mapped_column(
