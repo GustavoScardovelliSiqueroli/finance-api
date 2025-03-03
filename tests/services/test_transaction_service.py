@@ -48,6 +48,7 @@ async def test_transaction_service_full_case(transaction_service, category_servi
         Category(
             id=1,
             id_user=user_instance.id,
+            level=0,
             name='test',
             type='INCOME',
         )
