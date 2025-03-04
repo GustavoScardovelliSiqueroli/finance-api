@@ -8,6 +8,8 @@ from src.domain.models.transaction import Transaction
 from src.infra.db.repositories.user_repository import UserRepository
 from src.domain.models.user import User
 from src.domain.models.category import Category
+from src.services.split_service import SplitService
+from src.infra.db.repositories.split_repositoy import SplitRepository
 
 @pytest.fixture
 async def user_instance(db_session):
@@ -28,11 +30,19 @@ def transaction_repository(db_session):
     return TransactionRepository(db_session)
 
 @pytest.fixture
-def transaction_service(transaction_repository, category_service):
-    return TransactionService(transaction_repository, category_service)
+def split_repository(db_session):
+    return SplitRepository(db_session)
 
-@pytest.mark.asyncio
-async def test_transaction_service_full_case(transaction_service, category_service, user_instance):
+@pytest.fixture
+def split_service():
+    return SplitService(split_repository)
+
+@pytest.fixture
+def transaction_service(transaction_repository, category_service, split_service):
+    return TransactionService(transaction_repository, category_service, split_service=split_service)
+
+
+async def test_create_transaction(transaction_service, user_instance):
     transaction = await transaction_service.create_transaction(
         Transaction(
             id=1,
@@ -44,6 +54,8 @@ async def test_transaction_service_full_case(transaction_service, category_servi
     )
     assert transaction
 
+@pytest.mark.asyncio
+async def test_create_category(category_service, user_instance):
     category = await category_service.create_category(
         Category(
             id=1,
@@ -55,24 +67,72 @@ async def test_transaction_service_full_case(transaction_service, category_servi
     )
     assert category
 
-    tr_ct = await transaction_service.add_category(
-        transaction.id, category.id
+@pytest.mark.asyncio
+async def test_add_category(transaction_service, category_service, user_instance):
+    transaction = await transaction_service.create_transaction(
+        Transaction(
+            id=1,
+            id_user=user_instance.id,
+            value=1.0,
+            description='test',
+            type='INCOME',
+        )
     )
+    category = await category_service.create_category(
+        Category(
+            id=1,
+            id_user=user_instance.id,
+            level=0,
+            name='test',
+            type='INCOME',
+        )
+    )
+    tr_ct = await transaction_service.add_category(transaction.id, category.id)
     assert tr_ct
     assert tr_ct.categories
-    assert tr_ct.description == transaction.description
+    assert tr_ct.categories[0].id == category.id
 
-    tr_ct = await transaction_service.update_transaction(
-        transaction.id, {'description': 'test2'}
+@pytest.mark.asyncio
+async def test_update_transaction(transaction_service, user_instance):
+    transaction = await transaction_service.create_transaction(
+        Transaction(
+            id=1,
+            id_user=user_instance.id,
+            value=1.0,
+            description='test',
+            type='INCOME',
+        )
     )
+    tr_ct = await transaction_service.update_transaction(transaction.id, {'description': 'test2'})
     assert tr_ct
     assert tr_ct.description == 'test2'
 
-    tr_ct = await transaction_service.delete_transaction(transaction.id)
-    assert tr_ct
-    assert tr_ct.deleted_at
-
+@pytest.mark.asyncio
+async def test_get_transaction_by_id(transaction_service, user_instance):
+    transaction = await transaction_service.create_transaction(
+        Transaction(
+            id=1,
+            id_user=user_instance.id,
+            value=1.0,
+            description='test',
+            type='INCOME',
+        )
+    )
     tr_ct = await transaction_service.get_transaction_by_id(transaction.id)
     assert tr_ct
-    assert tr_ct.description == 'test2'
+    assert tr_ct.description == 'test'
+
+@pytest.mark.asyncio
+async def test_delete_transaction(transaction_service, user_instance):
+    transaction = await transaction_service.create_transaction(
+        Transaction(
+            id=1,
+            id_user=user_instance.id,
+            value=1.0,
+            description='test',
+            type='INCOME',
+        )
+    )
+    tr_ct = await transaction_service.delete_transaction(transaction.id)
+    assert tr_ct
     assert tr_ct.deleted_at
