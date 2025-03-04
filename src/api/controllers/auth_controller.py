@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.api.schemas.auth_schema import Login, RefreshToken, Token
 from src.cross_cutting.dependencies import get_user_service
-from src.domain.exceptions.auth_exceptions import AuthenticationError
+from src.domain.exceptions.auth_exceptions import AuthenticationError, InvalidTokenError
 from src.domain.exceptions.db_exceptions import DuplicateRecordError, ForeignKeyError
 from src.services.user_service import UserService
 
@@ -41,9 +43,25 @@ async def register(
     status_code=status.HTTP_200_OK,
 )
 async def login(
-    data: Login,
+    data: Optional[Login],
+    request: Request,
     user_service: UserService = Depends(get_user_service),
 ) -> Token:
+    if not data:
+        refresh_token = request.headers.get('refresh_token')
+        if refresh_token:
+            try:
+                token = await user_service.refresh_token(refresh_token)
+                return Token(access_token=token[0])
+            except InvalidTokenError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
+                ) from e
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Refresh token or login and password required',
+            )
     login = data.login
     password = data.password
     try:
@@ -54,6 +72,8 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
         ) from e
 
+
+# MAKE ROTE TO RENOVATE REFRESH_TOKEN
 
 # @router.get(
 #     '/pessoas',
