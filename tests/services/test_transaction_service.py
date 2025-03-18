@@ -9,7 +9,7 @@ from src.infra.db.repositories.user_repository import UserRepository
 from src.domain.models.user import User
 from src.domain.models.category import Category
 from src.services.split_service import SplitService
-from src.infra.db.repositories.split_repositoy import SplitRepository
+from src.infra.db.repositories.split_repository import SplitRepository
 
 @pytest.fixture
 async def user_instance(db_session):
