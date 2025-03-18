@@ -6,6 +6,8 @@ from starlette.responses import Response
 
 from src.config import Config
 
+CONFIG = Config()  # type: ignore
+
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: ...) -> Response:
@@ -27,7 +29,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token = authorization.split('Bearer ')[1]
 
         try:
-            payload = jwt.decode(token, Config.API_KEY, algorithms=[Config.ALGORITHM])
+            payload = jwt.decode(token, CONFIG.API_KEY, algorithms=[CONFIG.ALGORITHM])
             request.state.user = payload
         except jwt.InvalidTokenError:
             return JSONResponse(

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Final, Optional
+from typing import Any, Final, Optional
 
 import bcrypt
 import jwt
@@ -69,18 +69,21 @@ class UserService:
         )
 
     def __generate_jwt_token(self, user: User) -> tuple[str, str]:
-        payload: dict[str, str] = {
+        payload: dict[str, Any] = {
             'user_id': str(user.id),
             'login': str(user.login),
-            'exp': str(datetime.now(timezone.utc) + timedelta(hours=self.TOKEN_HOURS)),
+            'exp': (
+                datetime.now(timezone.utc) + timedelta(hours=self.TOKEN_HOURS)
+            ).timestamp(),
         }
         token: str = jwt.encode(payload, config.API_KEY, 'HS256')
-        refresh_payload: dict[str, str] = {
+
+        refresh_payload: dict[str, Any] = {
             'user_id': str(user.id),
             'login': str(user.login),
-            'exp': str(
+            'exp': (
                 datetime.now(timezone.utc) + timedelta(days=self.REFRESH_TOKEN_DAYS)
-            ),
+            ).timestamp(),
         }
         refresh_token: str = jwt.encode(refresh_payload, config.API_KEY, 'HS256')
         return token, refresh_token
