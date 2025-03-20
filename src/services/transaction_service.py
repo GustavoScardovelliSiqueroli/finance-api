@@ -86,3 +86,10 @@ class TransactionService:
     async def remove_splits(self, id: str, id_split: str) -> Transaction:
         # REMOVE all splits
         ...
+
+    async def get_balance(self) -> float:
+        balance: float = 0
+        values = await self.repository.get_transaction_values()
+        for value in values:
+            balance += value
+        return balance

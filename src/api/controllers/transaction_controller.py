@@ -44,6 +44,10 @@ async def get_transaction_by_id(
         transaction = await transaction_service.get_transaction_by_id(id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+    if not transaction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Transaction not found'
+        )
     return TransactionResponse.model_validate(transaction)
 
 

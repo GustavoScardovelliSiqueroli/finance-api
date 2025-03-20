@@ -135,3 +135,10 @@ class TransactionRepository(TransactionRepInterface):
 
                 await session.commit()
                 return transaction
+
+    async def get_transaction_values(self) -> list[float]:
+        async with self.session() as session:
+            async with session.begin():
+                stmt = select(Transaction.value)
+                result = await session.execute(stmt)
+                return list(result.scalars().all())
