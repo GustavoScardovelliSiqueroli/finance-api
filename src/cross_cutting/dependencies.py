@@ -34,16 +34,19 @@ def get_user_service(
     return UserService(repo)
 
 
-def get_category_service() -> CategoryService:
-    repo: CategoryRepInterface = Depends(get_category_repository)
+def get_category_service(
+    repo: CategoryRepInterface = Depends(get_category_repository),
+) -> CategoryService:
     return CategoryService(repo)
 
 
-def get_split_service() -> SplitService:
-    repo: SplitRepInterface = Depends(get_split_repository)
+def get_split_service(
+    repo: SplitRepInterface = Depends(get_split_repository),
+) -> SplitService:
     return SplitService(repo)
 
 
-def get_transaction_service() -> TransactionService:
-    repo: TransactionRepInterface = Depends(get_transaction_repository)
+def get_transaction_service(
+    repo: TransactionRepInterface = Depends(get_transaction_repository),
+) -> TransactionService:
     return TransactionService(repo, get_category_service(), get_split_service())
