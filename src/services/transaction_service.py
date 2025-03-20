@@ -41,7 +41,7 @@ class TransactionService:
         return await self.repository.update(id, data)
 
     async def delete_transaction(self, id: str) -> Transaction:
-        return await self.repository.update(id, {'deleted_at': datetime.now()})
+        return await self.repository.delete(id)
 
     async def add_category(self, id: str, id_category: str) -> Transaction:
         return await self.repository.add_category(id, id_category)
