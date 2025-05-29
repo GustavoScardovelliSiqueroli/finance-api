@@ -1,6 +1,8 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Optional
 
+from src.domain.models.enums.type_enum import Type
 from src.domain.models.split import Split
 from src.domain.models.transaction import Transaction
 from src.domain.rep_interfaces.transaction_rep_interface import TransactionRepInterface
@@ -22,7 +24,7 @@ class TransactionService:
     async def create_transaction(self, data: Transaction) -> Transaction:
         return await self.repository.create(data)
 
-    async def get_all_transaction(self) -> list[Optional[Transaction]]:
+    async def get_all_transaction(self) -> list[Transaction]:
         object_instances = await self.repository.get_all()
         if object_instances == []:
             return []
@@ -87,9 +89,14 @@ class TransactionService:
         # REMOVE all splits
         ...
 
-    async def get_balance(self) -> float:
-        balance: float = 0
-        values = await self.repository.get_transaction_values()
-        for value in values:
-            balance += value
+    async def get_balance(self) -> Decimal:
+        balance: Decimal = Decimal('0')
+        transactions = await self.get_all_transaction()
+        for transaction in transactions:
+            balance += (
+                transaction.value
+                if transaction.type == Type.INCOME
+                else -transaction.value
+            )
+
         return balance
