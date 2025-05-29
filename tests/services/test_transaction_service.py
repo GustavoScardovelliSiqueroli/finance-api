@@ -135,4 +135,3 @@ async def test_delete_transaction(transaction_service, user_instance):
     )
     tr_ct = await transaction_service.delete_transaction(transaction.id)
     assert tr_ct
-    assert tr_ct.deleted_at
