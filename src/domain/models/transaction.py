@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
@@ -15,14 +16,14 @@ class Transaction(Base):
     __tablename__ = 'transactions'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     id_user: Mapped[UUID] = mapped_column(ForeignKey('users.id'), nullable=False)
-    value: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(100), nullable=False)
+    value: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     type: Mapped[Type] = mapped_column(Enum(Type), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now()
     )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     categories: Mapped[list['Category']] = relationship(
         secondary=transactions_categories

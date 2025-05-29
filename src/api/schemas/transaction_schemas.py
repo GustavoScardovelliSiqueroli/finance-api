@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -12,18 +13,18 @@ class BaseTransaction(BaseModel):
 
 class TransactionResponse(BaseTransaction):
     id: int
-    value: float
+    value: Decimal
     description: Optional[str]
     type: Type
 
 
 class TransactionCreate(BaseTransaction):
-    value: float
+    value: Decimal
     description: Optional[str]
     type: Type
 
 
 class TransactionUpdate(BaseTransaction):
-    value: Optional[float]
+    value: Optional[Decimal]
     description: Optional[str]
     type: Optional[Type]
