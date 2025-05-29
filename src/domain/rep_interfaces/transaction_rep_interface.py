@@ -1,16 +1,19 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
+from uuid import UUID
 
 from src.domain.models.transaction import Transaction
 
 
 class TransactionRepInterface(ABC):
     @abstractmethod
-    async def get_all(self) -> list[Optional[Transaction]]:
+    async def get_all(self, id_user: UUID) -> Sequence[Transaction]:
         pass
 
     @abstractmethod
-    async def get_by_id(self, id: str) -> Optional[Transaction]:
+    async def get_by_id(
+        self, id: str, id_user: UUID, load_categories: bool = False
+    ) -> Optional[Transaction]:
         pass
 
     @abstractmethod

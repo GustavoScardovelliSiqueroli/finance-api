@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Request, status
 
 from src.api.schemas.balance_schemas import BalanceResponse
 from src.cross_cutting.dependencies import get_transaction_service
@@ -19,7 +21,9 @@ router = APIRouter(prefix='/balance', tags=['balance'])
     response_model=BalanceResponse,
 )
 async def get_balance(
+    request: Request,
     transaction_service: TransactionService = Depends(get_transaction_service),
 ) -> BalanceResponse:
-    balance = await transaction_service.get_balance()
+    id_user = UUID(request.state.user['user_id'])
+    balance = await transaction_service.get_balance(id_user)
     return BalanceResponse(balance=balance)

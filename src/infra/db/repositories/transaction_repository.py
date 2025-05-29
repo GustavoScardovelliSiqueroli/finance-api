@@ -1,5 +1,6 @@
 import re
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
+from uuid import UUID
 
 import aiomysql  # type: ignore
 from sqlalchemy import select
@@ -24,15 +25,12 @@ class TransactionRepository(TransactionRepInterface):
     ) -> None:
         self.session = session
 
-    async def get_all(self) -> list[Optional[Transaction]]:
+    async def get_all(self, id_user: UUID) -> Sequence[Transaction]:
         async with self.session() as session:
             async with session.begin():
-                stmt = select(Transaction)
+                stmt = select(Transaction).where(Transaction.id_user == id_user)
                 result = await session.execute(stmt)
-                object_instances: list[Optional[Transaction]] = []
-                for object_instance in result.scalars().all():
-                    object_instances.append(object_instance)
-                return object_instances
+                return result.scalars().all()
 
     async def create(self, data: Transaction) -> Transaction:
         try:
@@ -69,11 +67,15 @@ class TransactionRepository(TransactionRepInterface):
             raise e
 
     async def get_by_id(
-        self, id: str, load_categories: bool = False
+        self, id: str, id_user: UUID, load_categories: bool = False
     ) -> Optional[Transaction]:
         async with self.session() as session:
             async with session.begin():
-                stmt = select(Transaction).where(Transaction.id == id)
+                stmt = (
+                    select(Transaction)
+                    .where(Transaction.id == id)
+                    .where(Transaction.id_user == id_user)
+                )
                 if load_categories:
                     stmt = stmt.options(selectinload(Transaction.categories))
                 result = await session.execute(stmt)

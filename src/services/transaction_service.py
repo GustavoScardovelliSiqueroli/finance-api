@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
+from uuid import UUID
 
 from src.domain.models.enums.type_enum import Type
 from src.domain.models.split import Split
@@ -24,25 +25,28 @@ class TransactionService:
     async def create_transaction(self, data: Transaction) -> Transaction:
         return await self.repository.create(data)
 
-    async def get_all_transaction(self) -> list[Transaction]:
-        object_instances = await self.repository.get_all()
-        if object_instances == []:
-            return []
-        return [
-            object_instance
-            for object_instance in object_instances
-            if object_instance
-            if object_instance.deleted_at is None
-        ]
+    async def get_all_transaction(self, id_user: UUID) -> Sequence[Transaction]:
+        object_instances = await self.repository.get_all(id_user)
+        return object_instances
 
-    async def get_transaction_by_id(self, id: str) -> Optional[Transaction]:
-        return await self.repository.get_by_id(id)
+    async def get_transaction_by_id(
+        self, id: str, id_user: UUID
+    ) -> Optional[Transaction]:
+        return await self.repository.get_by_id(id, id_user)
 
-    async def update_transaction(self, id: str, data: dict[str, Any]) -> Transaction:
+    async def update_transaction(
+        self, id: str, data: dict[str, Any], id_user: UUID
+    ) -> Transaction:
         data['updated_at'] = datetime.now()
+        transaction = await self.repository.get_by_id(id, id_user)
+        if transaction is None:
+            raise ValueError(f'Transaction with ID {id} not found.')
         return await self.repository.update(id, data)
 
-    async def delete_transaction(self, id: str) -> Transaction:
+    async def delete_transaction(self, id: str, id_user: UUID) -> Transaction:
+        transaction = await self.repository.get_by_id(id, id_user)
+        if transaction is None:
+            raise ValueError(f'Transaction with ID {id} not found.')
         return await self.repository.delete(id)
 
     async def add_category(self, id: str, id_category: str) -> Transaction:
@@ -50,8 +54,10 @@ class TransactionService:
 
     async def remove_category(self, id: str, id_category: str) -> Transaction: ...
 
-    async def add_splits(self, id: str, data: list[dict[str, Any]]) -> None:
-        transaction = await self.repository.get_by_id(id)
+    async def add_splits(
+        self, id: str, data: list[dict[str, Any]], id_user: UUID
+    ) -> None:
+        transaction = await self.repository.get_by_id(id, id_user)
         if transaction is None:
             raise ValueError(f'Transaction with ID {id} not found.')
 
@@ -86,9 +92,9 @@ class TransactionService:
         # REMOVE all splits
         ...
 
-    async def get_balance(self) -> Decimal:
+    async def get_balance(self, id_user: UUID) -> Decimal:
         balance: Decimal = Decimal('0')
-        transactions = await self.get_all_transaction()
+        transactions = await self.get_all_transaction(id_user)
         for transaction in transactions:
             balance += (
                 transaction.value
