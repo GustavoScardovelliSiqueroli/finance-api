@@ -42,7 +42,7 @@ class UserService:
     async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
         try:
             payload: dict[str, str] = jwt.decode(
-                refresh_token, config.API_KEY, algorithms=[config.ALGORITHM]
+                refresh_token, config.API_KEY, algorithms=['HS256']
             )
             user_id: str = payload['user_id']
             user: Optional[User] = await self.repository.get_by_id(user_id)

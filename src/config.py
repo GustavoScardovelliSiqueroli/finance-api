@@ -12,7 +12,6 @@ class Config(BaseSettings):
     MYSQL_PASSWORD: str
     DB_PORT: int = 3307
     API_KEY: str
-    ALGORITHM: str
 
     class Config:
         env_file = '.env'

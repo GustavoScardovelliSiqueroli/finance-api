@@ -29,7 +29,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token = authorization.split('Bearer ')[1]
 
         try:
-            payload = jwt.decode(token, CONFIG.API_KEY, algorithms=[CONFIG.ALGORITHM])
+            payload = jwt.decode(token, CONFIG.API_KEY, algorithms=['HS256'])
             request.state.user = payload
         except jwt.InvalidTokenError:
             return JSONResponse(
