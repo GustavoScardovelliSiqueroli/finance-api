@@ -73,17 +73,14 @@ class TransactionService:
                 raise ValueError(
                     f'Category with ID {split["category_id"]} is not level 1.'
                 )
-
-            split['created_at'] = datetime.now()
+            split['id_transaction'] = id
             splits.append(split)
 
         for split in splits:
-            split['id_transaction'] = id
             split_model = Split(**split)
             await self.split_service.create_split(split_model)
 
-        # ADD splits with your repository
-        ...
+        return
 
     async def remove_splits(self, id: str, id_split: str) -> Transaction:
         # REMOVE all splits

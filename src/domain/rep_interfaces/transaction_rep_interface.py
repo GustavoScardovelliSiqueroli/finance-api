@@ -28,7 +28,3 @@ class TransactionRepInterface(ABC):
     @abstractmethod
     async def add_category(self, id: str, id_category: str) -> Transaction:
         pass
-
-    @abstractmethod
-    async def get_transaction_values(self) -> list[float]:
-        pass
