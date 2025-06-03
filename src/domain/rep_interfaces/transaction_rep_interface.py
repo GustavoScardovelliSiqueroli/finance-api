@@ -12,7 +12,7 @@ class TransactionRepInterface(ABC):
 
     @abstractmethod
     async def get_by_id(
-        self, id: str, id_user: UUID, load_categories: bool = False
+        self, id: int, id_user: UUID, load_categories: bool = False
     ) -> Optional[Transaction]:
         pass
 
@@ -21,13 +21,13 @@ class TransactionRepInterface(ABC):
         pass
 
     @abstractmethod
-    async def update(self, id: str, data: dict[str, Any]) -> Transaction:
+    async def update(self, id: int, data: dict[str, Any], id_user: UUID) -> Transaction:
         pass
 
     @abstractmethod
-    async def delete(self, id: str) -> Transaction:
+    async def delete(self, id: int, id_user: UUID) -> Transaction:
         pass
 
     @abstractmethod
-    async def add_category(self, id: str, id_category: str) -> Transaction:
+    async def add_category(self, id: int, id_category: str) -> Transaction:
         pass

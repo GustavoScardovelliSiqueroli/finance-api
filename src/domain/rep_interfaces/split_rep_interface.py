@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Sequence
 
 from src.domain.models.split import Split
 
 
 class SplitRepInterface(ABC):
     @abstractmethod
-    async def get_all(self) -> list[Optional[Split]]:
+    async def get_all(self) -> Sequence[Split]:
         pass
 
     @abstractmethod
@@ -23,4 +23,12 @@ class SplitRepInterface(ABC):
 
     @abstractmethod
     async def delete(self, id: str) -> Split:
+        pass
+
+    @abstractmethod
+    async def create_many(self, data: list[Split]) -> list[Split]:
+        pass
+
+    @abstractmethod
+    async def delete_all(self, id_transaction: int) -> Sequence[Split]:
         pass

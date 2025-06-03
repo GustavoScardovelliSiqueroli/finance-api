@@ -3,7 +3,7 @@ from typing import Any, Optional, Sequence
 from uuid import UUID
 
 import aiomysql  # type: ignore
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
@@ -67,7 +67,7 @@ class TransactionRepository(TransactionRepInterface):
             raise e
 
     async def get_by_id(
-        self, id: str, id_user: UUID, load_categories: bool = False
+        self, id: int, id_user: UUID, load_categories: bool = False
     ) -> Optional[Transaction]:
         async with self.session() as session:
             async with session.begin():
@@ -81,40 +81,47 @@ class TransactionRepository(TransactionRepInterface):
                 result = await session.execute(stmt)
                 return result.scalars().first()
 
-    async def update(self, id: str, data: dict[str, Any]) -> Transaction:
+    async def update(self, id: int, data: dict[str, Any], id_user: UUID) -> Transaction:
         async with self.session() as session:
             async with session.begin():
-                stmt = select(Transaction).where(Transaction.id == id)
-                result = await session.execute(stmt)
-                object_instance = result.scalars().first()
+                updatable_fields = {
+                    k: v
+                    for k, v in data.items()
+                    if hasattr(Transaction, k) and k not in ('id', 'id_user')
+                }
 
-                if not object_instance:
-                    raise ValueError(f'Transaction with ID {id} not found.')
+                if not updatable_fields:
+                    raise ValueError('No valid fields to update')
 
-                for key, value in data.items():
-                    if hasattr(object_instance, key) and key != 'id':
-                        setattr(object_instance, key, value)
+                result = await session.execute(
+                    update(Transaction)
+                    .where(Transaction.id == id)
+                    .where(Transaction.id_user == id_user)
+                    .values(**updatable_fields)
+                    .returning(Transaction)
+                )
 
-                session.add(object_instance)
-                await session.commit()
+                updated = result.scalars().first()
+                if not updated:
+                    raise RecordNotFoundError('Transaction', str(id))
 
-                return object_instance
+                return updated
 
-    async def delete(self, id: str) -> Transaction:
+    async def delete(self, id: int, id_user: UUID) -> Transaction:
         async with self.session() as session:
             async with session.begin():
-                stmt = select(Transaction).where(Transaction.id == id)
-                result = await session.execute(stmt)
+                result = await session.execute(
+                    delete(Transaction)
+                    .where(Transaction.id == id)
+                    .where(Transaction.id_user == id_user)
+                    .returning(Transaction)
+                )
                 object_instance = result.scalars().first()
-
                 if not object_instance:
-                    raise ValueError(f'Transaction with ID {id} not found.')
-
-                await session.delete(object_instance)
-                await session.commit()
+                    raise RecordNotFoundError('Transaction', str(id))
                 return object_instance
 
-    async def add_category(self, id: str, id_category: str) -> Transaction:
+    async def add_category(self, id: int, id_category: str) -> Transaction:
         async with self.session() as session:
             async with session.begin():
                 stmt = (
@@ -126,7 +133,7 @@ class TransactionRepository(TransactionRepInterface):
                 transaction = result.scalars().first()
 
                 if not transaction:
-                    raise RecordNotFoundError('Transaction', id)
+                    raise RecordNotFoundError('Transaction', str(id))
 
                 category = await session.get(Category, id_category)
 

@@ -48,5 +48,7 @@ def get_split_service(
 
 def get_transaction_service(
     repo: TransactionRepInterface = Depends(get_transaction_repository),
+    category_service: CategoryService = Depends(get_category_service),
+    split_service: SplitService = Depends(get_split_service),
 ) -> TransactionService:
-    return TransactionService(repo, get_category_service(), get_split_service())
+    return TransactionService(repo, category_service, split_service)

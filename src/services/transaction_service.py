@@ -18,8 +18,8 @@ class TransactionService:
         category_service: CategoryService,
         split_service: SplitService,
     ) -> None:
-        self.category_service = category_service
         self.repository = repository
+        self.category_service = category_service
         self.split_service = split_service
 
     async def create_transaction(self, data: Transaction) -> Transaction:
@@ -30,67 +30,60 @@ class TransactionService:
         return object_instances
 
     async def get_transaction_by_id(
-        self, id: str, id_user: UUID
+        self, id: int, id_user: UUID
     ) -> Optional[Transaction]:
         return await self.repository.get_by_id(id, id_user)
 
     async def update_transaction(
-        self, id: str, data: dict[str, Any], id_user: UUID
+        self, id: int, data: dict[str, Any], id_user: UUID
     ) -> Transaction:
         data['updated_at'] = datetime.now()
-        transaction = await self.repository.get_by_id(id, id_user)
-        if transaction is None:
-            raise ValueError(f'Transaction with ID {id} not found.')
-        return await self.repository.update(id, data)
+        return await self.repository.update(id, data, id_user)
 
-    async def delete_transaction(self, id: str, id_user: UUID) -> Transaction:
-        transaction = await self.repository.get_by_id(id, id_user)
-        if transaction is None:
-            raise ValueError(f'Transaction with ID {id} not found.')
-        return await self.repository.delete(id)
+    async def delete_transaction(self, id: int, id_user: UUID) -> Transaction:
+        return await self.repository.delete(id, id_user)
 
-    async def add_category(self, id: str, id_category: str) -> Transaction:
+    async def add_category(self, id: int, id_category: str) -> Transaction:
         return await self.repository.add_category(id, id_category)
 
-    async def remove_category(self, id: str, id_category: str) -> Transaction: ...
+    async def remove_category(self, id: int, id_category: str) -> Transaction:
+        """TODO"""
+        ...
 
     async def add_splits(
-        self, id: str, data: list[dict[str, Any]], id_user: UUID
-    ) -> None:
+        self, id: int, data: list[dict[str, Any]], id_user: UUID
+    ) -> list[Split]:
         transaction = await self.repository.get_by_id(id, id_user)
         if transaction is None:
             raise ValueError(f'Transaction with ID {id} not found.')
 
         splits_sum = 0
+        splits: list[Split] = []
         for split in data:
-            splits_sum += split['value']
-        if splits_sum != transaction.value:
-            raise ValueError('Splits must add up to 100%')
-
-        splits: list[dict[str, Any]] = []
-        for split in data:
+            splits_sum += split['amount']
             category = await self.category_service.get_category_by_id(
                 split['id_category']
             )
-            if category is None:
-                raise ValueError(f'Category with ID {split["category_id"]} not found.')
-
-            if category.level != 1:
+            if category and category.level != 1:
                 raise ValueError(
                     f'Category with ID {split["category_id"]} is not level 1.'
                 )
             split['id_transaction'] = id
-            splits.append(split)
+            splits.append(Split(**split))
 
-        for split in splits:
-            split_model = Split(**split)
-            await self.split_service.create_split(split_model)
+        if splits_sum != transaction.value:
+            raise ValueError('Splits must add up to 100%')
 
-        return
+        await self.split_service.delete_all_split(id)
+        return await self.split_service.create_splits(splits)
 
-    async def remove_splits(self, id: str, id_split: str) -> Transaction:
-        # REMOVE all splits
-        ...
+    async def remove_splits(
+        self, id_transaction: int, id_user: UUID
+    ) -> Sequence[Split]:
+        transaction = await self.repository.get_by_id(id_transaction, id_user)
+        if transaction is None:
+            raise ValueError(f'Transaction with ID {id_transaction} not found.')
+        return await self.split_service.delete_all_split(id_transaction)
 
     async def get_balance(self, id_user: UUID) -> Decimal:
         balance: Decimal = Decimal('0')

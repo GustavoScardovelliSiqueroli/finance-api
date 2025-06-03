@@ -4,16 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.api.schemas.transaction_schemas import TransactionCreate, TransactionResponse
 from src.cross_cutting.dependencies import get_transaction_service
+from src.domain.exceptions.db_exceptions import RecordNotFoundError
 from src.domain.models.transaction import Transaction
 from src.services.transaction_service import TransactionService
 
 router = APIRouter(prefix='/transactions', tags=['transactions'])
-
-"""
-    TODO: Add authentication and authorization
-    Verify if the user is the owner of the transaction
-    with middleware or dependency
-"""
 
 
 @router.get(
@@ -40,7 +35,7 @@ async def get_all_transactions(
 )
 async def get_transaction_by_id(
     request: Request,
-    id: str,
+    id: int,
     transaction_service: TransactionService = Depends(get_transaction_service),
 ) -> TransactionResponse:
     id_user = UUID(request.state.user['user_id'])
@@ -79,7 +74,7 @@ async def create_transaction(
 )
 async def update_transaction(
     request: Request,
-    id: str,
+    id: int,
     data: TransactionCreate,
     transaction_service: TransactionService = Depends(get_transaction_service),
 ) -> TransactionResponse:
@@ -100,12 +95,13 @@ async def update_transaction(
 )
 async def delete_transaction(
     request: Request,
-    id: str,
+    id: int,
     transaction_service: TransactionService = Depends(get_transaction_service),
 ) -> TransactionResponse:
     id_user = UUID(request.state.user['user_id'])
     try:
         transaction = await transaction_service.delete_transaction(id, id_user)
-    except ValueError as e:
+    except RecordNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
     return TransactionResponse.model_validate(transaction)

@@ -1,8 +1,8 @@
 import re
-from typing import Optional
+from typing import Optional, Sequence
 
 import aiomysql  # type: ignore
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -18,15 +18,12 @@ class SplitRepository(SplitRepInterface):
     ) -> None:
         self.session = session
 
-    async def get_all(self) -> list[Optional[Split]]:
+    async def get_all(self) -> Sequence[Split]:
         async with self.session() as session:
             async with session.begin():
                 stmt = select(Split)
                 result = await session.execute(stmt)
-                object_instances: list[Optional[Split]] = []
-                for object_instance in result.scalars().all():
-                    object_instances.append(object_instance)
-                return object_instances
+                return result.scalars().all()
 
     async def create(self, data: Split) -> Split:
         try:
@@ -101,3 +98,32 @@ class SplitRepository(SplitRepInterface):
                 await session.delete(object_instance)
                 await session.commit()
                 return object_instance
+
+    async def create_many(self, data: list[Split]) -> list[Split]:
+        async with self.session() as session:
+            successful_items: list[Split] = []
+            failed_items: list[tuple[Split, str]] = []
+
+            for item in data:
+                async with session.begin():
+                    try:
+                        session.add(item)
+                        await session.flush()
+                        successful_items.append(item)
+                    except IntegrityError as e:
+                        await session.rollback()
+                        failed_items.append((item, str(e)))
+                        continue
+
+            return successful_items
+
+    async def delete_all(self, id_transaction: int) -> Sequence[Split]:
+        async with self.session() as session:
+            async with session.begin():
+                result = await session.execute(
+                    delete(Split)
+                    .where(Split.id_transaction == id_transaction)
+                    .returning(Split)
+                )
+                deleted_splits = result.scalars().all()
+                return deleted_splits
