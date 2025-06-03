@@ -11,7 +11,7 @@ class Split(Base):
     __tablename__ = 'splits'
     id: Mapped[int] = mapped_column(primary_key=True)
     id_transaction: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
-    category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
+    id_category: Mapped[int] = mapped_column(ForeignKey('categories.id'), nullable=True)
     amount: Mapped[float]
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now()
