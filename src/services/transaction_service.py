@@ -37,6 +37,11 @@ class TransactionService:
     async def update_transaction(
         self, id: int, data: dict[str, Any], id_user: UUID
     ) -> Transaction:
+        splits = await self.split_service.get_all_split_by_id_transaction(id)
+        if splits and data.get('value'):
+            raise ValueError(
+                f'Transaction with ID {id} has splits and cannot be updated.'
+            )
         data['updated_at'] = datetime.now()
         return await self.repository.update(id, data, id_user)
 

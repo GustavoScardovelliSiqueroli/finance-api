@@ -84,7 +84,9 @@ async def update_transaction(
             id, TransactionCreate.model_dump(data), id_user
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
     return TransactionResponse.model_validate(transaction)
 
 
