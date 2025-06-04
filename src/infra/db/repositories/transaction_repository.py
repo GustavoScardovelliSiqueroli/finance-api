@@ -98,9 +98,15 @@ class TransactionRepository(TransactionRepInterface):
                     .where(Transaction.id == id)
                     .where(Transaction.id_user == id_user)
                     .values(**updatable_fields)
-                    .returning(Transaction)
                 )
+                if result.rowcount == 0:
+                    raise RecordNotFoundError('Transaction', str(id))
 
+                result = await session.execute(
+                    select(Transaction)
+                    .where(Transaction.id == id)
+                    .where(Transaction.id_user == id_user)
+                )
                 updated = result.scalars().first()
                 if not updated:
                     raise RecordNotFoundError('Transaction', str(id))
