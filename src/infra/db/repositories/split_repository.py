@@ -127,3 +127,10 @@ class SplitRepository(SplitRepInterface):
                 )
                 deleted_splits = result.scalars().all()
                 return deleted_splits
+
+    async def get_all_by_id_transaction(self, id_transaction: int) -> Sequence[Split]:
+        async with self.session() as session:
+            async with session.begin():
+                stmt = select(Split).where(Split.id_transaction == id_transaction)
+                result = await session.execute(stmt)
+                return result.scalars().all()

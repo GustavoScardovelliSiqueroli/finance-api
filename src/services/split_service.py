@@ -27,3 +27,8 @@ class SplitService:
 
     async def delete_all_split(self, id_transaction: int) -> Sequence[Split]:
         return await self.repository.delete_all(id_transaction)
+
+    async def get_all_split_by_id_transaction(
+        self, id_transaction: int
+    ) -> Sequence[Split]:
+        return await self.repository.get_all_by_id_transaction(id_transaction)

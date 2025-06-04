@@ -32,3 +32,7 @@ class SplitRepInterface(ABC):
     @abstractmethod
     async def delete_all(self, id_transaction: int) -> Sequence[Split]:
         pass
+
+    @abstractmethod
+    async def get_all_by_id_transaction(self, id_transaction: int) -> Sequence[Split]:
+        pass
